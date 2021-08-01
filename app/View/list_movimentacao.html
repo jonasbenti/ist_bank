@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Listagem de Movimentação</title>
+    <!--<link href="css/list.css" rel="stylesheet" type="text/css" media="screen"/>-->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <script src="https://igorescobar.github.io/jQuery-Mask-Plugin/js/jquery.mask.min.js"></script>
+</head>
+<body>
+    
+    <div id="panel_include" class="panel panel-primary">
+        <div class="panel-heading" style="text-align: center">Opções do sistema</div>
+    </div>
+    <div style="text-align: center">
+        <a href="home.php?class=InitList" class="btn btn-info"> Inicio </a>
+        <a href="home.php?class=PessoaList" class="btn btn-primary"> Pessoa </a>
+        <a href="home.php?class=MovimentacaoList" class="btn btn-success"> Movimentação </a>
+        <a href="home.php?class=ContaList" class="btn btn-primary"> Conta </a>
+    </div>
+    <br>
+    <div id="panel_include" class="panel panel-primary">
+        <div class="panel-heading" style="text-align: center">Criar Movimentação <b>{id_f}</b></div>
+    </div>
+    <form enctype="multipart/form-data" method="post" action="home.php?class=MovimentacaoList&method=save">
+        <input id="id" name="id" type="hidden" value="{id_f}">
+        <input id="value_max" name="value_max" type="hidden" value="0">
+        <div class="container">
+            <div class="form-group">
+                <label>Pessoa</label>
+                <select class="form-control" size="1" id="pessoas_id"
+                name="pessoas_id" onchange="searchContas(this.value)">
+                    <option value='0'> Selecione uma pessoa </option> 
+                    {combo_pessoas}             
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Nº Conta</label>
+                <select class="form-control" size="1" id="contas_id"
+                 name="contas_id" onchange="createExtract(this.value)">
+                    <option value='0'> Selecione uma conta </option>           
+                </select>
+            </div>
+            <div>
+                <div class="form-group col-md-4">
+                    <label for="dinheiro" id="label_valor">Valor</label>
+                    <input id="valor" name="valor" type="text" class="dinheiro form-control"
+                    style="width: 50%" min="1" required>
+                </div>
+
+                <div class="form-group col-md-4">
+                    <label>Depositar/Retirar</label>
+                    <select class="form-control" size="1" id="operacao"
+                     name="operacao" >           
+                        <option value='1'> Depositar </option>           
+                        <option value='2'> Retirar </option>           
+                    </select>
+                </div>
+            </div>    
+            
+        </div>        
+
+        <div style="text-align: center">
+            <input style="text-align: center" type="submit" class="btn btn-success" onclick="return validar()" value="Enviar">
+            <a href="home.php?class=MovimentacaoList" class="btn btn-danger"> Limpar formulário</a>
+        </div>
+
+    </form>
+    <br>
+    <div id="appTable" style="text-align: center" class="table-responsive" height="100%" width="100%">
+    
+    <div id="panel_include" class="panel panel-primary">
+        <div class="panel-heading" style="text-align: center"><label id="label_extract"> Extrato</label></div>
+    </div>
+    <table id="tbl_extract" class="table table-striped table-bordered table-hover">
+        <thead class="thead-dark">
+            <tr>
+                <td><b>Id</b></td>
+                <td><b>Data</b></td>
+                <td><b>Valor</b></td>
+            </tr>
+        </thead>
+    </table>
+</div>
+
+</body>
+<script>
+    $('.dinheiro').mask('#.##0,00', {reverse: true});
+    let tbl_extract = document.getElementById("tbl_extract");
+    var tbl_extract_body = document.createElement("tbody");
+    var operacao = document.getElementById("operacao");
+    var valor = document.getElementById("valor");
+    var contas_id = document.getElementById("contas_id");
+    var value_max = document.getElementById("value_max");
+    var label_valor = document.getElementById("label_valor");
+    var label_extract = document.getElementById("label_extract");
+    var saldo_conta = 0;
+    var contas = 0;
+    var conta_selected = 0;
+    var req;
+
+    function createTable(items) {
+        tbl_extract_body.remove();
+        tbl_extract_body = document.createElement("tbody");
+        let color;
+        for (item of items) {
+            if (parseFloat(item.valor) < 0) color;
+            color = parseFloat(item.valor) < 0 ? "red" : "green";
+            let row = document.createElement('tr');
+            row.innerHTML = `
+            <td>${item.id}</td>
+            <td>${item.created_at}</td>
+            <td><span style='color:${color}'>${item.valor}</span></td>
+            `;
+            
+            tbl_extract_body.appendChild(row);
+            tbl_extract.appendChild(tbl_extract_body);
+        }
+    }
+
+    function createExtract(contas_id_f) {
+        if (contas_id_f == "" || contas_id_f.disabled || contas_id_f == 0) return;
+        var url = "class=ContaApi&method=find&id="+contas_id_f;
+        var url2 = "class=MovimentacaoApi&method=allMovimentacoesByConta&contas_id="+contas_id_f;
+        
+        $.post("home.php", url2, function( data ) {
+            var movimentacoes = JSON.parse(data);
+            createTable(movimentacoes);
+        });
+
+        $.post("home.php", url, function( data ) {
+            conta_selected = [];
+            conta_selected = JSON.parse(data);
+            label_extract.innerHTML = "Extrato Saldo: "+conta_selected.saldo.replace('.', ',');
+        });
+    } 
+
+    function searchContas(pessoas_id_f) {
+        if (pessoas_id_f == "" || pessoas_id_f.disabled || pessoas_id_f == 0) return;
+        var url = "class=ContaApi&method=verifyContasByPessoa&pessoas_id="+pessoas_id_f;
+        $.post("home.php", url, function( data ) {
+            contas = JSON.parse(data);
+            $("#contas_id").html('<option value="0">Selecione uma conta</option>');
+            contas.map(({
+                id,
+                numero_conta,
+                saldo
+            }) => {
+                value_max.value = saldo;
+                saldo = saldo.replace('.',',');
+                $('#contas_id').append(`<option value='${id}'>${numero_conta} - R$ ${saldo}</option>`);
+            });
+        });
+    } 
+
+    function validar() {
+        valor_not_formated = valor.value.replace('.','');
+       
+        if (contas_id.value == 0) {
+        alert('Selecione uma conta');
+        contas_id.focus();
+        return false;
+        }
+        if (valor.value < 1 || valor.value == 0 || valor.value == "") {
+        alert('Campo valor precisa ser preenchido e maior que 1');
+        valor.focus();
+        return false;
+        }
+        if ((operacao.value == 2) && (parseFloat(conta_selected.saldo) <  parseFloat(valor_not_formated))) {
+        alert(' O valor da retirada '+valor.value+' precisa ser menor que o saldo '+conta_selected.saldo.replace('.', ','));
+        valor.focus();
+        return false;
+        }
+    }    
+</script>
+</html>

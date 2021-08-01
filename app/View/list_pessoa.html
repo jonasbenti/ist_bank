@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Listagem de Pessoa</title>
+    <!--<link href="css/list.css" rel="stylesheet" type="text/css" media="screen"/>-->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <script src="https://igorescobar.github.io/jQuery-Mask-Plugin/js/jquery.mask.min.js"></script>
+</head>
+<body>    
+    <div id="panel_include" class="panel panel-primary">
+        <div class="panel-heading" style="text-align: center">Opções do sistema</div>
+    </div>
+    <div style="text-align: center">
+        <a href="home.php?class=InitList" class="btn btn-info"> Inicio </a>
+        <a href="home.php?class=PessoaList" class="btn btn-primary"> Pessoa </a>
+        <a href="home.php?class=MovimentacaoList" class="btn btn-success"> Movimentação </a>
+        <a href="home.php?class=ContaList" class="btn btn-primary"> Conta </a>
+    </div>
+    <br>
+    <div id="panel_include" class="panel panel-primary">
+        <div class="panel-heading" style="text-align: center">Incluir/Atualizar produto <b>{id_f}</b></div>
+    </div>
+    <form enctype="multipart/form-data" method="post" action="home.php?class=PessoaList&method=save">
+        <input id="id" name="id" type="hidden" value="{id_f}">
+        <div class="container">
+            <div class="form-group col-md-9">
+                <label>Nome</label>
+                <input id="nome" name="nome" class="form-control" type="text" 
+                pattern="[A-Za-záàâãéèêíïóôõöúçñÁÀÂÃÉÈÍÏÓÔÕÖÚÇÑ ]+$" title="Prencha apenas com letras"
+                 value="{nome_f}" required
+                 onkeyup="capitalize(this.id);"
+                 >
+    
+            </div>
+                
+            <div class="form-group col-md-3">
+                <label>CPF</label>
+                <input id="cpf" name="cpf" class="form-control cpf-mask" type="text"
+                placeholder="Ex.: 000.000.000-00" value="{cpf_f}" required>
+            </div>
+        </div>
+    
+        <div class="container">
+            <div class="form-group">
+                <label>Endereço</label>
+                <input name="endereco" class="form-control" type="text"
+                 value="{endereco_f}" required>
+            </div>
+        </div>
+        <div style="text-align: center">
+            <input style="text-align: center" type="submit" class="btn btn-success" onclick="return validar()" value="Enviar">
+            <a href="home.php?class=PessoaList" class="btn btn-danger"> Limpar formulário</a>
+        </div>
+        </form>
+    <br>
+    <div id="appTable" style="text-align: center" class="table-responsive" height="100%" width="100%">
+    
+    <div id="panel_include" class="panel panel-primary">
+        <div class="panel-heading" style="text-align: center">Listagem de Pessoa</div>
+    </div>
+    <table class="table table-striped table-bordered table-hover">
+        <thead class="thead-dark">
+            <tr>
+                <td><b>Id</b></td>
+                <td><b>Nome</b></td>
+                <td><b>CPF</b></td>
+                <td><b>Endereço</b></td>
+                <td><b>Nº contas</b></td>
+                <td></td>
+                <td></td>
+            </tr>
+        </thead>
+        <tbody class="Table table-striped table-bordered table-hover">
+            {items}
+        </tbody>        
+    </table>
+    </div>
+
+</body>
+<script type="text/javascript" language="Javascript">
+    var cpf = document.getElementById('cpf');
+
+    $(document).ready(function(){
+		$("#cpf").mask("999.999.999-99");
+	});
+
+    function capitalize(campoFormulario) {
+        var string = document.getElementById(campoFormulario).value;        
+        if(string.length > 0) {        
+            string = string.toLowerCase();
+            string = string.split(' ');
+            
+            for (var i = 0, len = string.length; i < len; i++) {                
+                if(string[i].length > 2) {                    
+                    string[i] = string[i].charAt(0).toUpperCase() + string[i].slice(1);                    
+                };                
+            };            
+            document.getElementById(campoFormulario).value = string.join(' ');
+
+            return true;            
+        }        
+    }    
+
+    function validar() {       
+        cpf_not_mask = cpf.value.replace(/[^0-9]+/g, ''); 
+
+        if (cpf_not_mask.length != 11) {
+            alert(cpf+' Prencha o cpf corretamente!');
+            cpf.focus();
+            return false;
+        }
+    }
+    </script>
+</html>
